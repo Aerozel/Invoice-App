@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import html2pdf from 'html2pdf.js';
-import './App.css';
+import './style.css';
 
 const PRODUCTS = [
   { label: 'Select a product...', value: 0 },
