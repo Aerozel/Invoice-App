@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import html2pdf from 'html2pdf.js';
-import './style.css';
+import './App.css';
 
 const PRODUCTS = [
   { label: 'Select a product...', value: 0 },
@@ -21,7 +21,10 @@ export default function App() {
   const [selectedProduct, setSelectedProduct] = useState(PRODUCTS[0]);
   const [quantity, setQuantity] = useState('');
   const [items, setItems] = useState([]);
+  
+  // Counter States
   const [invoiceCounter, setInvoiceCounter] = useState(1);
+  const [currentMonthYear, setCurrentMonthYear] = useState('');
 
   useEffect(() => {
     loadInvoiceCounter();
@@ -29,28 +32,41 @@ export default function App() {
 
   const loadInvoiceCounter = () => {
     const now = new Date();
-    const currentMonthYear = `${now.getMonth() + 1}-${now.getFullYear()}`;
+    // For local storage logic
+    const monthYearKey = `${now.getMonth() + 1}-${now.getFullYear()}`;
+    // For display logic
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const yyyy = now.getFullYear();
+    setCurrentMonthYear(`${mm}/${yyyy}`);
+
     const savedData = localStorage.getItem('invoice_data');
     
     if (savedData) {
       const { monthYear, counter } = JSON.parse(savedData);
-      if (monthYear === currentMonthYear) {
+      if (monthYear === monthYearKey) {
         setInvoiceCounter(counter);
       } else {
         setInvoiceCounter(1);
-        localStorage.setItem('invoice_data', JSON.stringify({ monthYear: currentMonthYear, counter: 1 }));
+        localStorage.setItem('invoice_data', JSON.stringify({ monthYear: monthYearKey, counter: 1 }));
       }
     } else {
-      localStorage.setItem('invoice_data', JSON.stringify({ monthYear: currentMonthYear, counter: 1 }));
+      localStorage.setItem('invoice_data', JSON.stringify({ monthYear: monthYearKey, counter: 1 }));
     }
   };
 
-  const getFormattedInvoiceNumber = () => {
+  // Allows user to manually fix the counter if they switch devices
+  const handleManualCounterChange = (e) => {
+    const val = parseInt(e.target.value) || 1;
+    setInvoiceCounter(val);
+    
     const now = new Date();
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const yyyy = now.getFullYear();
+    const monthYearKey = `${now.getMonth() + 1}-${now.getFullYear()}`;
+    localStorage.setItem('invoice_data', JSON.stringify({ monthYear: monthYearKey, counter: val }));
+  };
+
+  const getFormattedInvoiceNumber = () => {
     const xxxx = String(invoiceCounter).padStart(4, '0');
-    return `${mm}/${yyyy}/${xxxx}`;
+    return `${currentMonthYear}/${xxxx}`;
   };
 
   const addItem = () => {
@@ -151,18 +167,17 @@ export default function App() {
     };
 
     try {
-      // Generate PDF as a blob
       const pdfBlob = await html2pdf().set(opt).from(htmlContent).output('blob');
       const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
 
       // Increment Counter
       const newCounter = invoiceCounter + 1;
       setInvoiceCounter(newCounter);
+      
       const now = new Date();
-      const currentMonthYear = `${now.getMonth() + 1}-${now.getFullYear()}`;
-      localStorage.setItem('invoice_data', JSON.stringify({ monthYear: currentMonthYear, counter: newCounter }));
+      const monthYearKey = `${now.getMonth() + 1}-${now.getFullYear()}`;
+      localStorage.setItem('invoice_data', JSON.stringify({ monthYear: monthYearKey, counter: newCounter }));
 
-      // Web Share API for Mobile Browsers (WhatsApp integration)
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           title: `Invoice ${invoiceNumber}`,
@@ -170,7 +185,6 @@ export default function App() {
           files: [file]
         });
       } else {
-        // Fallback for Desktop: Auto-download the file
         const fileUrl = URL.createObjectURL(pdfBlob);
         const link = document.createElement('a');
         link.href = fileUrl;
@@ -180,7 +194,6 @@ export default function App() {
         document.body.removeChild(link);
       }
 
-      // Reset form
       setPartyName('');
       setItems([]);
 
@@ -193,6 +206,18 @@ export default function App() {
   return (
     <div className="app-container">
       <h1 className="header-title">Invoice Generator</h1>
+
+      {/* NEW: Editable Invoice Counter */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '15px', alignItems: 'center' }}>
+        <span style={{ fontSize: '14px', color: '#666', marginRight: '8px' }}>Current Invoice No:</span>
+        <span style={{ fontWeight: 'bold', marginRight: '4px' }}>{currentMonthYear}/</span>
+        <input 
+          type="number" 
+          value={invoiceCounter}
+          onChange={handleManualCounterChange}
+          style={{ width: '60px', padding: '6px', borderRadius: '6px', border: '1px solid #ccc', textAlign: 'center', fontWeight: 'bold' }}
+        />
+      </div>
       
       <input
         className="input-field"
