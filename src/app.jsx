@@ -22,51 +22,20 @@ export default function App() {
   const [quantity, setQuantity] = useState('');
   const [items, setItems] = useState([]);
   
-  // Counter States
-  const [invoiceCounter, setInvoiceCounter] = useState(1);
-  const [currentMonthYear, setCurrentMonthYear] = useState('');
+  const [discountPercent, setDiscountPercent] = useState(20);
+  const [invoiceNumber, setInvoiceNumber] = useState('');
 
   useEffect(() => {
-    loadInvoiceCounter();
+    generateNewInvoiceNumber();
   }, []);
 
-  const loadInvoiceCounter = () => {
+  const generateNewInvoiceNumber = () => {
     const now = new Date();
-    // For local storage logic
-    const monthYearKey = `${now.getMonth() + 1}-${now.getFullYear()}`;
-    // For display logic
+    const dd = String(now.getDate()).padStart(2, '0');
     const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const yyyy = now.getFullYear();
-    setCurrentMonthYear(`${mm}/${yyyy}`);
-
-    const savedData = localStorage.getItem('invoice_data');
-    
-    if (savedData) {
-      const { monthYear, counter } = JSON.parse(savedData);
-      if (monthYear === monthYearKey) {
-        setInvoiceCounter(counter);
-      } else {
-        setInvoiceCounter(1);
-        localStorage.setItem('invoice_data', JSON.stringify({ monthYear: monthYearKey, counter: 1 }));
-      }
-    } else {
-      localStorage.setItem('invoice_data', JSON.stringify({ monthYear: monthYearKey, counter: 1 }));
-    }
-  };
-
-  // Allows user to manually fix the counter if they switch devices
-  const handleManualCounterChange = (e) => {
-    const val = parseInt(e.target.value) || 1;
-    setInvoiceCounter(val);
-    
-    const now = new Date();
-    const monthYearKey = `${now.getMonth() + 1}-${now.getFullYear()}`;
-    localStorage.setItem('invoice_data', JSON.stringify({ monthYear: monthYearKey, counter: val }));
-  };
-
-  const getFormattedInvoiceNumber = () => {
-    const xxxx = String(invoiceCounter).padStart(4, '0');
-    return `${currentMonthYear}/${xxxx}`;
+    const yy = String(now.getFullYear()).slice(-2);
+    const randomXXXX = String(Math.floor(1000 + Math.random() * 9000)); // Generates 1000 to 9999
+    setInvoiceNumber(`${dd}${mm}${yy}-${randomXXXX}`);
   };
 
   const addItem = () => {
@@ -94,7 +63,7 @@ export default function App() {
   };
 
   const subTotal = items.reduce((sum, item) => sum + item.total, 0);
-  const discount = subTotal * 0.20;
+  const discount = subTotal * (discountPercent / 100);
   const grandTotal = subTotal - discount;
 
   const generateAndSharePDF = async () => {
@@ -103,7 +72,6 @@ export default function App() {
       return;
     }
 
-    const invoiceNumber = getFormattedInvoiceNumber();
     const dateStr = new Date().toLocaleDateString();
 
     const htmlContent = `
@@ -146,7 +114,7 @@ export default function App() {
             <span>₹${subTotal.toFixed(2)}</span>
           </div>
           <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee;">
-            <span>Discount (20%):</span>
+            <span>Discount (${discountPercent}%):</span>
             <span style="color: #FF3B30;">- ₹${discount.toFixed(2)}</span>
           </div>
           <div style="display: flex; justify-content: space-between; padding: 12px 0; font-weight: bold; font-size: 1.2em; border-top: 2px solid #333;">
@@ -157,7 +125,10 @@ export default function App() {
       </div>
     `;
 
-    const fileName = `Invoice_${invoiceNumber.replace(/\//g, '-')}.pdf`;
+    // Clean up party name for safe file saving, and format as {party name}+{invoice number}.pdf
+    const safePartyName = partyName.replace(/[^a-zA-Z0-9 ]/g, "").trim();
+    const fileName = `${safePartyName}+${invoiceNumber}.pdf`;
+    
     const opt = {
       margin: 0.5,
       filename: fileName,
@@ -170,13 +141,8 @@ export default function App() {
       const pdfBlob = await html2pdf().set(opt).from(htmlContent).output('blob');
       const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
 
-      // Increment Counter
-      const newCounter = invoiceCounter + 1;
-      setInvoiceCounter(newCounter);
-      
-      const now = new Date();
-      const monthYearKey = `${now.getMonth() + 1}-${now.getFullYear()}`;
-      localStorage.setItem('invoice_data', JSON.stringify({ monthYear: monthYearKey, counter: newCounter }));
+      // Generate a new random invoice number for the next customer
+      generateNewInvoiceNumber();
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
@@ -207,16 +173,9 @@ export default function App() {
     <div className="app-container">
       <h1 className="header-title">Invoice Generator</h1>
 
-      {/* NEW: Editable Invoice Counter */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '15px', alignItems: 'center' }}>
-        <span style={{ fontSize: '14px', color: '#666', marginRight: '8px' }}>Current Invoice No:</span>
-        <span style={{ fontWeight: 'bold', marginRight: '4px' }}>{currentMonthYear}/</span>
-        <input 
-          type="number" 
-          value={invoiceCounter}
-          onChange={handleManualCounterChange}
-          style={{ width: '60px', padding: '6px', borderRadius: '6px', border: '1px solid #ccc', textAlign: 'center', fontWeight: 'bold' }}
-        />
+        <span style={{ fontSize: '14px', color: '#666', marginRight: '8px' }}>Invoice No:</span>
+        <span style={{ fontWeight: 'bold', letterSpacing: '1px' }}>{invoiceNumber}</span>
       </div>
       
       <input
@@ -280,8 +239,17 @@ export default function App() {
           <span>Subtotal:</span>
           <span>₹{subTotal.toFixed(2)}</span>
         </div>
-        <div className="summary-row">
-          <span>Discount (20%):</span>
+        <div className="summary-row" style={{ alignItems: 'center' }}>
+          <span style={{ display: 'flex', alignItems: 'center' }}>
+            Discount (
+            <input 
+              type="number" 
+              value={discountPercent} 
+              onChange={(e) => setDiscountPercent(e.target.value === '' ? 0 : parseFloat(e.target.value))}
+              style={{ width: '45px', padding: '4px', margin: '0 6px', borderRadius: '4px', border: '1px solid #ccc', textAlign: 'center' }}
+            />
+            %):
+          </span>
           <span className="discount-text">- ₹{discount.toFixed(2)}</span>
         </div>
         <div className="summary-row grand-total">
