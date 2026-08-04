@@ -2,18 +2,19 @@ import React, { useState, useEffect } from 'react';
 import html2pdf from 'html2pdf.js';
 import './style.css';
 
-const PRODUCTS = [
-  { label: 'Select a product...', value: 0 },
+const PRODUCTS = [{ label: 'Select a product...', value: 0 },
   { label: 'CF500', value: 175 }, { label: 'CF1000', value: 280 },
   { label: 'SR500', value: 140 }, { label: 'SR1000', value: 250 },
   { label: 'DC500', value: 180 }, { label: 'DC1000', value: 290 },
   { label: 'DC5000', value: 1250 }, { label: 'MC500', value: 120 },
   { label: 'MC1000', value: 190 }, { label: 'MC5000', value: 800 },
-  { label: 'DT1000', value: 310 }, { label: 'DT5000', value: 1500 },
-  { label: 'TC1000', value: 160 }, { label: 'TC5000', value: 650 },
-  { label: 'DW1000', value: 140 }, { label: 'DW5000', value: 400 },
-  { label: 'PFW1000', value: 175 }, { label: 'PFW5000', value: 750 },
-  { label: 'FW1000', value: 150 }, { label: 'FW5000', value: 600 },
+  { label: 'DT500', value: 180 }, { label: 'DT1000', value: 310 }, 
+  { label: 'DT5000', value: 1500 }, { label: 'TC1000', value: 160 }, 
+  { label: 'TC5000', value: 650 }, { label: 'DW1000', value: 140 }, 
+  { label: 'DW5000', value: 400 }, { label: 'PFW1000', value: 175 }, 
+  { label: 'PFW5000', value: 725 }, { label: 'FW1000', value: 150 }, 
+  { label: 'FW5000', value: 600 }, { label: 'DT500', value: 180 },
+  { label: 'HW500', value: 140 }, { label: 'HW1000', value: 220 }
 ];
 
 export default function App() {
