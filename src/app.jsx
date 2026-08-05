@@ -89,7 +89,7 @@ export default function App() {
       return { ...prev, [product.label]: '' }; // Start completely blank
     });
     setSearchTerm(''); // Clear search box after selection
-    setIsDropdownOpen(true); // Keep dropdown open!
+    setIsDropdownOpen(false); // Keep dropdown open!
   };
 
   const removeItem = (label) => {
