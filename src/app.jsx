@@ -13,7 +13,7 @@ const PRODUCTS = [
   { label: 'DT5000', value: 1500 }, { label: 'TC1000', value: 160 }, 
   { label: 'TC5000', value: 650 }, { label: 'DW1000', value: 140 }, 
   { label: 'DW5000', value: 400 }, { label: 'PFW1000', value: 175 }, 
-  { label: 'PFW5000', value: 725 }, { label: 'FW1000', value: 150 }, 
+  { label: 'PFW5000', value: 750 }, { label: 'FW1000', value: 150 }, 
   { label: 'FW5000', value: 600 }, { label: 'DT500', value: 180 },
   { label: 'HW500', value: 140 }, { label: 'HW1000', value: 220 }
 ];
