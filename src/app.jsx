@@ -24,10 +24,26 @@ export default function App() {
   // const [quantity, setQuantity] = useState('');
   // const [items, setItems] = useState([]);
 
-  const [partyName, setPartyName] = useState('');
-  const [cart, setCart] = useState({}); // Stores selections as { 'ProductName': quantity }
+const [partyName, setPartyName] = useState(() => {
+    return localStorage.getItem('draftParty') || '';
+  });
   
-  const [discountPercent, setDiscountPercent] = useState(0);
+  const [cart, setCart] = useState(() => {
+    const savedCart = localStorage.getItem('draftCart');
+    return savedCart ? JSON.parse(savedCart) : {};
+  });
+  
+  const [discountPercent, setDiscountPercent] = useState(() => {
+    const savedDiscount = localStorage.getItem('draftDiscount');
+    return savedDiscount !== null ? parseFloat(savedDiscount) : 0;
+  });
+  // Auto-save form data to local storage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('draftParty', partyName);
+    localStorage.setItem('draftCart', JSON.stringify(cart));
+    localStorage.setItem('draftDiscount', discountPercent);
+  }, [partyName, cart, discountPercent]);
+  
   const [invoiceNumber, setInvoiceNumber] = useState('');
 
   // Custom Dropdown States
